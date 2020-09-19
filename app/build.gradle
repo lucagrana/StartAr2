@@ -1,0 +1,49 @@
+apply plugin: 'com.android.application'
+
+android {
+    compileSdkVersion 28
+    defaultConfig {
+        applicationId "com.example.startar2"
+
+        // 24 is the minimum since ARCore only works with 24 and higher.
+        minSdkVersion 24
+        targetSdkVersion 28
+        versionCode 1
+        versionName "1.0"
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+}
+
+dependencies {
+    // ARCore library
+    implementation 'com.google.ar:core:1.2.0'
+    // Obj - a simple Wavefront OBJ file loader
+    // https://github.com/javagl/Obj
+    implementation 'de.javagl:obj:0.2.1'
+    implementation 'com.android.support:appcompat-v7:28.1.1'
+    implementation 'com.android.support:design:28.1.1'
+    implementation 'com.github.appoly:ARCore-Location:0.2.1'
+    implementation 'com.android.support.constraint:constraint-layout:1.1.3'
+    implementation 'com.android.support:design:28.0.0'
+    implementation "com.google.android.material:material:1.1.0-alpha06"
+
+
+    //implementation 'uk.co.appoly.arcorelocation:arcore-location-debug@aar'
+}
+
+repositories {
+    flatDir {
+        dirs 'libs'
+    }
+    maven { url 'https://jitpack.io' }
+}
+
+
+
+
