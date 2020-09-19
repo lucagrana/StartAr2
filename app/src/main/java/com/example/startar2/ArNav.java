@@ -147,7 +147,8 @@ public class ArNav extends AppCompatActivity implements GLSurfaceView.Renderer {
                             MyModel.getLatitudini().get(i),
                             new AnnotationRenderer("")));
         }
-        
+
+
         // Correct heading with touching side of screen
         /*mSurfaceView.setOnTouchListener(
                 new View.OnTouchListener() {
