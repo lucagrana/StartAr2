@@ -137,15 +137,16 @@ public class ArNav extends AppCompatActivity implements GLSurfaceView.Renderer {
                     new LocationMarker(
                             MyModel.getLongitudini().get(i),
                             MyModel.getLatitudini().get(i),
+
                             new ObjectRenderer("andy.obj", "andy.png")
 
                     )
             );
-            locationScene.mLocationMarkers.add(
+           /* locationScene.mLocationMarkers.add(
                     new LocationMarker(
                             MyModel.getLongitudini().get(i),
                             MyModel.getLatitudini().get(i),
-                            new AnnotationRenderer("")));
+                            new AnnotationRenderer("")));*/
         }
 
 
@@ -268,7 +269,7 @@ public class ArNav extends AppCompatActivity implements GLSurfaceView.Renderer {
             Log.e(TAG, "Failed to read obj file");
         }*/
         try {
-            mPlaneRenderer.createOnGlThread(/*context=*/this, "trigrid.png");
+            mPlaneRenderer.createOnGlThread(this, "trigrid.png");
         } catch (IOException e) {
             Log.e(TAG, "Failed to read plane texture");
         }
