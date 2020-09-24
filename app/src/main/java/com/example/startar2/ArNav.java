@@ -312,7 +312,8 @@ public class ArNav extends AppCompatActivity implements GLSurfaceView.Renderer {
                                 t++;
                             }
                             Pose pose = image.getCenterPose();
-                            toast(pose, i);
+                            Pose camPose = frame.getCamera().getPose();
+                            toast(pose,camPose, i);
                             //showSnackbarMessage("QRCode riconosciuto", false);
                         }
                     }
@@ -459,14 +460,55 @@ public class ArNav extends AppCompatActivity implements GLSurfaceView.Renderer {
         Toast.makeText(this,
                 "db setted", Toast.LENGTH_LONG).show();
     }
-    public void toast(Pose pose, int i) {
+    public void toast(Pose pose, Pose camPose, int i) {
         if(t==1) {
-
-            MyModel.getQrId();
-            double qrcodeLat = 45.49494278394151;
-            double qrcodeLon = 9.292630744914961;
-            LocationScene.updateAnchors(qrcodeLat, qrcodeLon, pose);
-
+            double qrLon = 0.;
+            double qrLat = 0.;
+            int degree = 0;
+            double initialBearing = 0.;
+            Log.d("posetoast", pose.toString());
+            Log.d("posetoast", pose.ty() + " " + pose.tz() + " " + pose.tx());
+            double distance = Math.sqrt(Math.pow((pose.tx() - camPose.tx()), 2)/ 2.0 +
+                    Math.pow((pose.ty() - camPose.ty()),2) / 2.0 +
+                    Math.pow((pose.tz() - camPose.tz()),2) / 2.0);
+            float azimuth = getAzimuth(pose, camPose);
+            for (int j = 0; j < MyModel.getQrId().size(); j++){
+                if (MyModel.getQrId().get(j) == i) {
+                    qrLat = MyModel.getQrLat().get(j);
+                    qrLon = MyModel.getQrLon().get(j);
+                    degree = MyModel.getQrOrientamento().get(j);
+                }
+            }
+            if (degree + azimuth > 360){
+                initialBearing = degree + azimuth - 360;
+            } else {
+                initialBearing = degree + azimuth;
+            }
+            double[] coordinateCamera = travel( qrLat,  qrLon ,  initialBearing,  distance);
         }
+    }
+
+    public float getAzimuth(Pose pose, Pose camPose) {
+
+        float angle = (float) Math.toDegrees(Math.atan2(pose.qx()- camPose.qx(), pose.qy() - camPose.qy()));
+
+        // the range of ± 90.0° must be corrected...
+        return angle;
+    }
+
+    public double[] travel(double qrLat, double qrLon , double initialBearing, double distance) {
+        double bR = Math.toRadians(initialBearing);
+        double lat1R = Math.toRadians(qrLat);
+        double lon1R = Math.toRadians(qrLon);
+        double dR = distance/6371.01; //Mettere diviso radius earth
+
+        double a = Math.sin(dR) * Math.cos(lat1R);
+        double lat2 = Math.asin(Math.sin(lat1R) * Math.cos(dR) + a * Math.cos(bR));
+        double lon2 = lon1R
+                + Math.atan2(Math.sin(bR) * a, Math.cos(dR) - Math.sin(lat1R) * Math.sin(lat2));
+        double[] latlon = new double[2];
+        latlon[0] = Math.toDegrees(lat2);
+        latlon[1] = Math.toDegrees(lon2);
+        return latlon;
     }
 }
