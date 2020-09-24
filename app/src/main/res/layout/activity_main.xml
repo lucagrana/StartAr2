@@ -14,7 +14,7 @@
         android:layout_marginTop="111dp"
         android:layout_marginEnd="109dp"
         android:onClick="onClickLoad"
-        android:text="load path"
+        android:text="ar navigation"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
@@ -27,7 +27,7 @@
         android:layout_marginTop="176dp"
         android:layout_marginEnd="109dp"
         android:onClick="arNav"
-        android:text="Ar"
+        android:text="Settings"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.49"
         app:layout_constraintStart_toStartOf="parent"

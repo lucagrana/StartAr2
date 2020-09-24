@@ -2,12 +2,12 @@ package com.example.startar2;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.os.Bundle;
 import android.annotation.SuppressLint;
-import android.app.Activity;
 import android.opengl.GLES20;
 import android.opengl.GLSurfaceView;
-import android.os.Bundle;
 
 import android.util.Log;
 import android.view.GestureDetector;
@@ -19,19 +19,19 @@ import android.widget.Toast;
 import com.google.android.material.snackbar.BaseTransientBottomBar;
 import com.google.android.material.snackbar.Snackbar;
 import com.google.ar.core.Anchor;
+import com.google.ar.core.AugmentedImage;
+import com.google.ar.core.AugmentedImageDatabase;
 import com.google.ar.core.Camera;
 import com.google.ar.core.Config;
 import com.google.ar.core.Frame;
-import com.google.ar.core.HitResult;
 import com.google.ar.core.Plane;
 import com.google.ar.core.PointCloud;
+import com.google.ar.core.Pose;
 import com.google.ar.core.Session;
-import com.google.ar.core.Trackable;
 import com.google.ar.core.TrackingState;
 import com.example.startar2.helpers.TapHelper;
 import com.example.startar2.rendering.BackgroundRenderer;
 import com.example.startar2.rendering.ObjectRenderer;
-import com.example.startar2.rendering.ObjectRenderer.BlendMode;
 import com.example.startar2.rendering.PlaneRenderer;
 import com.example.startar2.rendering.PointCloudRenderer;
 import com.google.ar.core.exceptions.CameraNotAvailableException;
@@ -39,16 +39,16 @@ import com.google.ar.core.exceptions.UnavailableApkTooOldException;
 import com.google.ar.core.exceptions.UnavailableArcoreNotInstalledException;
 import com.google.ar.core.exceptions.UnavailableSdkTooOldException;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
-import java.util.concurrent.ArrayBlockingQueue;
+import java.util.Collection;
+
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
 
 
 import uk.co.appoly.arcorelocation.LocationScene;
 import uk.co.appoly.arcorelocation.LocationMarker;
-import uk.co.appoly.arcorelocation.rendering.AnnotationRenderer;
-import uk.co.appoly.arcorelocation.rendering.ImageRenderer;
 import uk.co.appoly.arcorelocation.utils.ARLocationPermissionHelper;
 import uk.co.appoly.arcorelocation.utils.Utils2D;
 
@@ -58,14 +58,14 @@ public class ArNav extends AppCompatActivity implements GLSurfaceView.Renderer {
 
     // Rendering. The Renderers are created here, and initialized when the GL surface is created.
     private GLSurfaceView mSurfaceView;
-
+    private AugmentedImageDatabase imageDatabase;
     private Session mSession;
     private GestureDetector mGestureDetector;
     private Snackbar mMessageSnackbar;
     private DisplayRotationHelper mDisplayRotationHelper;
-
+    private Frame frame = null;
     private final BackgroundRenderer mBackgroundRenderer = new BackgroundRenderer();
-
+    int t=0;
     private final PlaneRenderer mPlaneRenderer = new PlaneRenderer();
     private final PointCloudRenderer mPointCloud = new PointCloudRenderer();
     private TapHelper tapHelper;
@@ -123,6 +123,7 @@ public class ArNav extends AppCompatActivity implements GLSurfaceView.Renderer {
 
         // Create default config and check if supported.
         Config config = new Config(mSession);
+        setUpDataBase(config, mSession);
         if (!mSession.isSupported(config)) {
             showSnackbarMessage("This device does not support AR", true);
         }
@@ -298,9 +299,26 @@ public class ArNav extends AppCompatActivity implements GLSurfaceView.Renderer {
             // Obtain the current frame from ARSession. When the configuration is set to
             // UpdateMode.BLOCKING (it is by default), this will throttle the rendering to the
             // camera framerate.
-            Frame frame = mSession.update();
+            frame = mSession.update();
             Camera camera = frame.getCamera();
+            //RICONOSCO QRCODE
+            Collection<AugmentedImage> images = frame.getUpdatedTrackables(AugmentedImage.class);
+            for (AugmentedImage image:images) {
+                if(image.getTrackingState() == TrackingState.TRACKING) {
+                    for (int i =1; i<4; i++){
+                        if(image.getName().equals("" + i)) {
+                            //do something
+                            if (t<10){
+                                t++;
+                            }
+                            Pose pose = image.getCenterPose();
+                            toast(pose, i);
+                            //showSnackbarMessage("QRCode riconosciuto", false);
+                        }
+                    }
 
+                }
+            }
 
             // Handle taps. Handling only one tap per frame, as taps are usually low frequency
             // compared to frame rate.
@@ -374,6 +392,8 @@ public class ArNav extends AppCompatActivity implements GLSurfaceView.Renderer {
             // Avoid crashing the application due to unhandled exceptions.
             Log.e(TAG, "Exception on the OpenGL thread", t);
         }
+
+
     }
 
     private void showSnackbarMessage(String message, boolean finishOnDismiss) {
@@ -381,6 +401,7 @@ public class ArNav extends AppCompatActivity implements GLSurfaceView.Renderer {
                 ArNav.this.findViewById(android.R.id.content),
                 message, Snackbar.LENGTH_INDEFINITE);
         mMessageSnackbar.getView().setBackgroundColor(0xbf323232);
+
         if (finishOnDismiss) {
             mMessageSnackbar.setAction(
                     "Dismiss",
@@ -421,5 +442,31 @@ public class ArNav extends AppCompatActivity implements GLSurfaceView.Renderer {
                 mMessageSnackbar = null;
             }
         });
+    }
+    public void setUpDataBase(Config config, Session session) {
+        imageDatabase = new AugmentedImageDatabase(session);
+        Bitmap bitmap =  null;
+        for(int i = 1; i<4; i++){
+            try (InputStream inputStream = getAssets().open(i +".png")) {
+                bitmap = BitmapFactory.decodeStream(inputStream);
+            } catch (IOException e) {
+                Log.e("no immagine", "I/O exception loading augmented image bitmap.", e);
+            }
+            imageDatabase.addImage("" + i, bitmap,0.165f);
+        }
+
+        config.setAugmentedImageDatabase(imageDatabase);
+        Toast.makeText(this,
+                "db setted", Toast.LENGTH_LONG).show();
+    }
+    public void toast(Pose pose, int i) {
+        if(t==1) {
+
+            MyModel.getQrId();
+            double qrcodeLat = 45.49494278394151;
+            double qrcodeLon = 9.292630744914961;
+            LocationScene.updateAnchors(qrcodeLat, qrcodeLon, pose);
+
+        }
     }
 }

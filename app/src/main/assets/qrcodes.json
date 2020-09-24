@@ -1,0 +1,10 @@
+{
+    "qrcodes": [
+      {
+        "id": 1,
+        "latitudine" : 45.49454576364957,
+        "longitudine" : 9.292832779256916,
+        "orientamento": 277
+      }
+    ]
+}

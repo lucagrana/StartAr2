@@ -58,6 +58,8 @@ public class LoadPath extends AppCompatActivity {
                 JSONObject punti = new JSONObject(builder.toString());
                 Log.d("filee", "JSON parsed" + punti.toString());
                 MyModel.coordinate(punti);
+                Intent intent = new Intent(getApplicationContext(), ArNav.class);
+                startActivity(intent);
 
             } else {
                 Log.d("fileee", "result IS NOT OK");
