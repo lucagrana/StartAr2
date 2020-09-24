@@ -465,13 +465,14 @@ public class ArNav extends AppCompatActivity implements GLSurfaceView.Renderer {
             double qrLon = 0.;
             double qrLat = 0.;
             int degree = 0;
-            double initialBearing = 0.;
+            float initialBearing = 0f;
             Log.d("posetoast", pose.toString());
             Log.d("posetoast", pose.ty() + " " + pose.tz() + " " + pose.tx());
             double distance = Math.sqrt(Math.pow((pose.tx() - camPose.tx()), 2)/ 2.0 +
                     Math.pow((pose.ty() - camPose.ty()),2) / 2.0 +
                     Math.pow((pose.tz() - camPose.tz()),2) / 2.0);
             float azimuth = getAzimuth(pose, camPose);
+            float pitch = getPitch(pose, camPose);
             for (int j = 0; j < MyModel.getQrId().size(); j++){
                 if (MyModel.getQrId().get(j) == i) {
                     qrLat = MyModel.getQrLat().get(j);
@@ -479,25 +480,38 @@ public class ArNav extends AppCompatActivity implements GLSurfaceView.Renderer {
                     degree = MyModel.getQrOrientamento().get(j);
                 }
             }
+            /*if (degree + pitch > 360){
+                pitch = degree + pitch - 360;
+            } else {
+                pitch = degree + pitch;
+            }*/
             if (degree + azimuth > 360){
                 initialBearing = degree + azimuth - 360;
             } else {
                 initialBearing = degree + azimuth;
             }
             double[] coordinateCamera = travel( qrLat,  qrLon ,  initialBearing,  distance);
+            Log.d("posetoastLat", coordinateCamera[0] + "");
+            Log.d("posetoastLon", coordinateCamera[1] + "");
+            LocationScene.updateAnchors(coordinateCamera, pitch, initialBearing);
         }
     }
 
     public float getAzimuth(Pose pose, Pose camPose) {
 
         float angle = (float) Math.toDegrees(Math.atan2(pose.qx()- camPose.qx(), pose.qy() - camPose.qy()));
-
+        Log.d("posetoastAngle", angle + "");
         // the range of ± 90.0° must be corrected...
         return angle;
+    }
+    public float getPitch(Pose pose, Pose camPose) {
+        float pitch = (float) Math.toDegrees((Math.atan2(Math.sqrt(Math.pow((pose.qz() - camPose.qz()),2) + Math.pow((pose.qx() - camPose.qx()),2)),(pose.qy() - camPose.qy())) + Math.PI));
+        return pitch;
     }
 
     public double[] travel(double qrLat, double qrLon , double initialBearing, double distance) {
         double bR = Math.toRadians(initialBearing);
+        distance = distance/1000;
         double lat1R = Math.toRadians(qrLat);
         double lon1R = Math.toRadians(qrLon);
         double dR = distance/6371.01; //Mettere diviso radius earth
